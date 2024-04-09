@@ -18,6 +18,8 @@ return new class extends Migration
             $table->foreignIdFor(User::class);
             $table->foreignIdFor(Comment::class);
             $table->timestamps();
+
+            $table->unique(["user_id","comment_id"]);
         });
     }
 

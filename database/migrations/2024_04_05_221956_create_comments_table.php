@@ -16,11 +16,11 @@ return new class extends Migration
     {
         Schema::create('comments', function (Blueprint $table) {
             $table->id();
-            $table->string('content');
+            $table->text('content');
             $table->timestamps();
             $table->foreignIdFor(User::class);
             $table->foreignIdFor(Post::class);
-            $table->foreignIdFor(Comment::class)->nullable();
+            $table->foreignIdFor(Comment::class, "parent_comment_id")->nullable();
         });
     }
 

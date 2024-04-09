@@ -16,8 +16,8 @@ return new class extends Migration
             $table->id();
             $table->string('make');
             $table->string('model');
-            $table->date('year');
-            $table->string('description');
+            $table->year('year');
+            $table->text('description');
             $table->foreignIdFor(User::class);
             $table->timestamps();
         });
