@@ -9,12 +9,12 @@ use Illuminate\Support\Facades\Hash;
 class AuthController extends Controller
 {
     public function login(Request $request) {
-        $login_data = $request->validate([
-            'email' => 'required|max:255',
+        $loginData = $request->validate([
+            'email' => 'required|email|max:255',
             'password' => 'required|max:255',            
         ]);
-        $user = User::where("email", $login_data['email'])->first();
-        if (!$user || !Hash::check($login_data['password'], $user->password)) {
+        $user = User::where("email", $loginData['email'])->first();
+        if (!$user || !Hash::check($loginData['password'], $user->password)) {
             return response()->json([
                 "message" => "Invalid credentials"
             ], 401);
