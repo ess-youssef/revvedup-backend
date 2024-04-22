@@ -21,9 +21,10 @@ class ListingsController extends Controller
         $user = auth()->user();
         $listingData = $request->validate([
             'price' => 'required|numeric|max:999999999',
+            'mileage' => 'required|numeric|max:999999999',
             'vehicle' => [
                 'required',
-                Rule::exists('vehicles')->where(function(Builder $query) use ($user) {
+                Rule::exists('vehicles', 'id')->where(function(Builder $query) use ($user) {
                     return $query->where('user_id', $user->id);
                 }),
             ],
@@ -57,6 +58,7 @@ class ListingsController extends Controller
         $user = auth()->user();
         $listingData = $request->validate([
             'price' => 'required|numeric|max:999999999',
+            'mileage' => 'required|numeric|max:999999999',
         ]);
 
         $listing->update($listingData);

@@ -22,6 +22,7 @@ class ListingFactory extends Factory
         $userIds = User::pluck('id');
         return [
             'price' => fake()->randomFloat(2),
+            'price' => fake()->randomNumber(),
             'status' => fake()->randomElement(["SOLD","FORSALE"]),
             'vehicle_id'=> fake()->randomElement($vehicleIds),
             'user_id'=> fake()->randomElement($userIds),

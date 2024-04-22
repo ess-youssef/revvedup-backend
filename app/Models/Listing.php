@@ -11,6 +11,13 @@ class Listing extends Model
 
     protected $fillable = [
         "price",
+        "mileage",
+    ];
+
+    protected $hidden = [
+        'user_id',
+        'vehicle_id',
+
     ];
 
     public function author() {
