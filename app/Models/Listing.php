@@ -9,6 +9,9 @@ class Listing extends Model
 {
     use HasFactory;
 
+    protected $fillable = [
+        "price",
+    ];
 
     public function author() {
         return $this->belongsTo(User::class);

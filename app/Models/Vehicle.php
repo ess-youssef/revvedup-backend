@@ -8,6 +8,17 @@ use Illuminate\Database\Eloquent\Model;
 class Vehicle extends Model
 {
     use HasFactory;
+
+    protected $fillable = [
+        "make",
+        "model",
+        "year",
+        "description"
+    ];
+
+    protected $hidden = [
+        'user_id',
+    ];
     
     public function listings() {
         return $this->hasMany(Listing::class);
