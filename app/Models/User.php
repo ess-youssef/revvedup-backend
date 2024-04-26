@@ -74,4 +74,8 @@ class User extends Authenticatable
     public function listings() {
         return $this->hasMany(Listing::class);
     }
+
+    public function upvotes() {
+        return $this->belongsToMany(Post::class, PostUpvote::class);
+    }
 }

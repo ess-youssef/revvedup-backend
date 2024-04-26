@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Http\Resources\ListingResource;
 use App\Models\Listing;
 use App\Models\User;
 use Illuminate\Database\Query\Builder;
@@ -13,7 +14,14 @@ class ListingsController extends Controller
 {
     public function show(Listing $listing)
     {
+        $listing->load("vehicle");
         return $listing;
+    }
+
+    public function list()
+    {
+        $listings = Listing::paginate(30)->with("vehicle");
+        return ListingResource::collection($listings);
     }
 
     public function createListing(Request $request)
@@ -33,6 +41,8 @@ class ListingsController extends Controller
         $listing = $user->listings()->make(Arr::except($listingData, 'vehicle'));
         $listing->vehicle()->associate($listingData['vehicle']);
         $listing->save();
+
+        $listing->load("vehicle");
 
         return response()->json($listing, 201);
     }
@@ -55,13 +65,13 @@ class ListingsController extends Controller
             abort(404, "Listing not found");
         }
 
-        $user = auth()->user();
         $listingData = $request->validate([
             'price' => 'required|numeric|max:999999999',
             'mileage' => 'required|numeric|max:999999999',
         ]);
 
         $listing->update($listingData);
+        $listing->load("vehicle");
 
         return $listing;
     }
@@ -84,6 +94,7 @@ class ListingsController extends Controller
         $newOwner = User::where('username', $saleData['buyer'])->first();
         $listing->vehicle->owner()->dissociate();
         $listing->vehicle->owner()->associate($newOwner);
+        $listing->status = "SOLD";
         $listing->save();
         return ["message" => "Listing sold sucessfully"];
     }
