@@ -2,6 +2,7 @@
 
 use App\Http\Controllers\AuthController;
 use App\Http\Controllers\CommentsController;
+use App\Http\Controllers\EventsController;
 use App\Http\Controllers\ListingsController;
 use App\Http\Controllers\PostsController;
 use App\Http\Controllers\UsersController;
@@ -50,4 +51,12 @@ Route::prefix("posts")->group(function () {
     Route::delete("{post}/comments/{comment}", [CommentsController::class, "deleteComment"])->middleware("auth:sanctum")->name("comment.delete");
     Route::put("{post}/comments/{comment}", [CommentsController::class, "editComment"])->middleware("auth:sanctum")->name("comment.edit");
     Route::post("{post}/comments/{comment}/toggle-upvote", [CommentsController::class, "toggleUpvoteComment"])->middleware("auth:sanctum")->name("coment.upvote");
+});
+
+Route::prefix("events")->group(function () {
+    Route::get("/", [EventsController::class, "list"])->name("events.show");
+    Route::get("{event}", [EventsController::class, "show"])->name("events.show");
+    Route::post("register", [EventsController::class, "register"])->middleware("auth:sanctum")->name("events.register");
+    Route::delete("{event}", [EventsController::class, "deleteEvent"])->middleware("auth:sanctum")->name("events.delete");
+    Route::put("{event}", [EventsController::class, "editEvent"])->middleware("auth:sanctum")->name("events.edit");
 });
