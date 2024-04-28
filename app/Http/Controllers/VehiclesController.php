@@ -4,7 +4,12 @@ namespace App\Http\Controllers;
 
 use App\Models\User;
 use App\Models\Vehicle;
+use App\Models\VehicleImage;
+use Exception;
 use Illuminate\Http\Request;
+use Illuminate\Support\Arr;
+use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Storage;
 
 class VehiclesController extends Controller
 {
@@ -20,12 +25,38 @@ class VehiclesController extends Controller
             'model' => 'required|max:255',
             'year' => 'required|numeric',
             'description' => 'required|max:255',
+            'photos.*' => 'required|mimes:jpg,png,jpeg|max:5148'
         ]);
 
-        $user = auth()->user();
-        $vehicle = $user->vehicles()->create($vehicleData);
+        if ($request->hasFile("photos")) {
+            DB::transaction(function () use ($vehicleData, $request) {
+                $added_paths = [];
+                try {
+                    $user = auth()->user();
+                    $vehicle = $user->vehicles()->create($vehicleData);
+        
+                    $files = $request->file("photos");
+                    foreach ($files as $file) {
+                        $path = $file->store("uploads");
 
-        return response()->json($vehicle, 201);
+                        array_push($added_paths, $path);
+
+                        $vehicle->images()->create([
+                            "image_path" => $path
+                        ]);
+                    }
+    
+                    response()->json($vehicle, 201);
+                } catch (Exception $e) {
+                    foreach ($added_paths as $path) {
+                        Storage::delete($path);
+                    }
+                    throw $e;
+                }
+            });
+        } else {
+            abort(422, "Missing photos");
+        }
     }
 
     public function userVehicles(User $user)

@@ -8,6 +8,10 @@ use Illuminate\Database\Eloquent\Model;
 class VehicleImage extends Model
 {
     use HasFactory;
+
+    protected $fillable = [
+        'image_path'
+    ];
     
     public function vehicle() {
         return $this->belongsTo(Vehicle::class);
