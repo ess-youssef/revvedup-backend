@@ -33,7 +33,7 @@ class EventsController extends Controller
     public function register(Request $request) {
         $eventData = $request->validate([
             'title' => 'required|max:255',
-            'description' => 'required|max:255',
+            'description' => 'required|max:1000',
             'start_date' => 'required|date',
             'end_date' => 'required|date',
             'location' => 'required|max:255',
@@ -84,7 +84,7 @@ class EventsController extends Controller
 
         $eventData = $request->validate([
             'title' => 'required|max:255',
-            'description' => 'required|max:255',
+            'description' => 'required|max:1000',
             'start_date' => 'required',
             'end_date' => 'required',
             'location' => 'required|max:255',
