@@ -17,9 +17,10 @@ return new class extends Migration
             $table->id();
             $table->decimal('price', 15);
             $table->integer('mileage');
+            $table->text('description');
             $table->enum('status', ["SOLD","FORSALE"])->default("FORSALE");
             $table->timestamps();
-            $table->foreignIdFor(Vehicle::class);  
+            $table->foreignIdFor(Vehicle::class);
             $table->foreignIdFor(User::class);
         });
     }

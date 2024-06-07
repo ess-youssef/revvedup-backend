@@ -2,12 +2,26 @@
 
 namespace App\Http\Controllers;
 
+use App\Http\Resources\UserResource;
 use App\Models\User;
 use Illuminate\Http\Request;
 
 
 class UsersController extends Controller
 {
+    public function me() {
+        return auth()->user();
+    }
+
+    public function all(Request $request) {
+        $searchTerm = $request->query("search");
+        $users =
+            $searchTerm
+                ? User::search($searchTerm)->paginate(30)
+                : User::paginate(30);
+        return UserResource::collection($users);
+    }
+
     public function register(Request $request) {
         $userData = $request->validate([
             'firstname' => 'required|max:255',

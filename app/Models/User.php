@@ -3,6 +3,8 @@
 namespace App\Models;
 
 // use Illuminate\Contracts\Auth\MustVerifyEmail;
+
+use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
@@ -37,6 +39,7 @@ class User extends Authenticatable
     protected $hidden = [
         'password',
         'remember_token',
+        'email_verified_at',
     ];
 
     /**
@@ -77,5 +80,13 @@ class User extends Authenticatable
 
     public function upvotes() {
         return $this->belongsToMany(Post::class, PostUpvote::class);
+    }
+
+    // SELECT * FROM users WHERE firstname LIKE '%youssef%'
+    public function scopeSearch(Builder $query, string $search): void {
+        $query
+            ->where('firstname', 'LIKE', '%' . $search . '%')
+            ->orWhere('lastname', 'LIKE', '%' . $search . '%')
+            ->orWhere('username', 'LIKE', '%' . $search . '%');
     }
 }

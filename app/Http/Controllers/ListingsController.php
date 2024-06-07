@@ -9,18 +9,30 @@ use Illuminate\Database\Query\Builder;
 use Illuminate\Http\Request;
 use Illuminate\Support\Arr;
 use Illuminate\Validation\Rule;
+use Illuminate\Support\Facades\DB;
 
 class ListingsController extends Controller
 {
     public function show(Listing $listing)
     {
-        $listing->load("vehicle");
+        $listing->load("vehicle.images");
+        $listing->load("author");
         return $listing;
     }
 
-    public function list()
+    public function userListings(User $user)
     {
-        $listings = Listing::paginate(30)->with("vehicle");
+        $userListings = $user->listings()->with("vehicle.images")->paginate(30);
+        return ListingResource::collection($userListings);
+    }
+
+    public function list(Request $request)
+    {
+        $searchTerm = $request->query("search");
+        $listings =
+            $searchTerm
+                ? Listing::with("vehicle.images")->search($searchTerm)->latest()->paginate(30)
+                : Listing::with("vehicle.images")->latest()->paginate(30);
         return ListingResource::collection($listings);
     }
 
@@ -30,6 +42,7 @@ class ListingsController extends Controller
         $listingData = $request->validate([
             'price' => 'required|numeric|max:999999999',
             'mileage' => 'required|numeric|max:999999999',
+            'description' => 'required|max:255',
             'vehicle' => [
                 'required',
                 Rule::exists('vehicles', 'id')->where(function(Builder $query) use ($user) {
@@ -38,11 +51,21 @@ class ListingsController extends Controller
             ],
         ]);
 
+        $existingListing = 
+            Listing::where("user_id", $user->id)
+                ->where("vehicle_id", $listingData["vehicle"])
+                ->where("status", "FORSALE")->first();
+
+        if ($existingListing) {
+            abort(409, "You already listed this vehicle for sale");
+        }
+
         $listing = $user->listings()->make(Arr::except($listingData, 'vehicle'));
         $listing->vehicle()->associate($listingData['vehicle']);
         $listing->save();
 
-        $listing->load("vehicle");
+        $listing->load("vehicle.images");
+        $listing->load("author");
 
         return response()->json($listing, 201);
     }
@@ -64,14 +87,19 @@ class ListingsController extends Controller
         if ($user->id != $listing->user_id) {
             abort(404, "Listing not found");
         }
+        if ($listing->status === "SOLD") {
+            abort(422, "Listing is already sold");
+        }
 
         $listingData = $request->validate([
             'price' => 'required|numeric|max:999999999',
             'mileage' => 'required|numeric|max:999999999',
+            'description' => 'required|max:255',
         ]);
 
         $listing->update($listingData);
-        $listing->load("vehicle");
+        $listing->load("vehicle.images");
+        $listing->load("author");
 
         return $listing;
     }
@@ -81,6 +109,9 @@ class ListingsController extends Controller
         $user = auth()->user();
         if ($user->id != $listing->user_id) {
             abort(404, "Listing not found");
+        }
+        if ($listing->status === "SOLD") {
+            abort(422, "Listing is already sold");
         }
         $saleData = $request->validate([
             'buyer' => [
@@ -92,10 +123,13 @@ class ListingsController extends Controller
         ]);
         
         $newOwner = User::where('username', $saleData['buyer'])->first();
-        $listing->vehicle->owner()->dissociate();
-        $listing->vehicle->owner()->associate($newOwner);
-        $listing->status = "SOLD";
-        $listing->save();
+        DB::transaction(function () use ($listing, $newOwner) {
+            $listing->vehicle->owner()->dissociate();
+            $listing->vehicle->owner()->associate($newOwner);
+            $listing->status = "SOLD";
+            $listing->vehicle->save();
+            $listing->save();
+        });
         return ["message" => "Listing sold sucessfully"];
     }
 }

@@ -4,6 +4,7 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Support\Facades\Auth;
 
 class Comment extends Model
 {
@@ -18,6 +19,8 @@ class Comment extends Model
         'post_id',
         'parent_comment_id',
     ];
+
+    protected $appends = ['upvoted_by_user'];
 
     public function author() {
         return $this->belongsTo(User::class, "user_id");
@@ -37,5 +40,12 @@ class Comment extends Model
 
     public function upvotes() {
         return $this->belongsToMany(User::class, CommentUpvote::class);
+    }
+
+    public function getUpvotedByUserAttribute() {
+        $user = Auth::user();
+        if ($user == null) return false;
+        $upvote = $this->upvotes()->where("user_id", $user->id)->first();
+        return $upvote != null;
     }
 }

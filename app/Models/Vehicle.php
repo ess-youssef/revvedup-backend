@@ -19,6 +19,10 @@ class Vehicle extends Model
     protected $hidden = [
         'user_id',
     ];
+
+    protected $casts = [
+        'year' => 'int',
+    ];
     
     public function listings() {
         return $this->hasMany(Listing::class);
@@ -31,6 +35,6 @@ class Vehicle extends Model
 
     
     public function owner() {
-        return $this->belongsTo(User::class);
+        return $this->belongsTo(User::class, "user_id");
     }
 }

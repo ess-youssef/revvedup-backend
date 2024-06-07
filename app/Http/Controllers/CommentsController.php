@@ -12,7 +12,7 @@ class CommentsController extends Controller
 
     public function allComments(Post $post)
     {
-        $comments = $post->comments()->with("author")->paginate(30);
+        $comments = $post->comments()->with("author")->withCount("upvotes")->latest()->paginate(30);
         return CommentResource::collection($comments);
     }
 
@@ -22,6 +22,7 @@ class CommentsController extends Controller
             abort(404, "Comment not found"); 
         }
         $comment->load("author");
+        $comment->loadCount("upvotes");
         return $comment;
     }
 
@@ -37,6 +38,7 @@ class CommentsController extends Controller
         $comment->post()->associate($post);
         $comment->save();
         $comment->load("author");
+        $comment->loadCount("upvotes");
     
         return response()->json($comment, 201);
     }
@@ -54,7 +56,7 @@ class CommentsController extends Controller
 
         $comment->delete();
 
-        return ["message" => "comment deleted sucessfully"];
+        return ["message" => "Comment deleted sucessfully"];
     }
 
     
@@ -76,6 +78,7 @@ class CommentsController extends Controller
 
         $comment->update($commentData);
         $comment->load("author");
+        $comment->loadCount("upvotes");
 
         return $comment;
     }

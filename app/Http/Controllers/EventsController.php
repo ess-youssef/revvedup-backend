@@ -5,6 +5,8 @@ namespace App\Http\Controllers;
 use App\Models\Event;
 use Carbon\Carbon;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Auth;
+
 
 class EventsController extends Controller
 {
@@ -44,11 +46,21 @@ class EventsController extends Controller
             abort(422, "End date should be greater or equal than start date");
         }
 
+        $eventData["start_date"] = $startDate->format("Y-m-d");
+        $eventData["end_date"] = $endDate->format("Y-m-d");
+
         $event = Event::create($eventData);
         return response()->json($event, 201);
     }
 
-    public function show(Event $event) {
+    public function show(Request $request, Event $event) {
+        if ($request->bearerToken()) {
+            $user = Auth::guard("sanctum")->user();
+            if ($user) {
+                Auth::setUser($user);
+            }
+        }
+        $event->loadCount("attendance");
         return $event;
     }
 
@@ -61,6 +73,7 @@ class EventsController extends Controller
         $event->delete();
         return ["message" => "Event deleted sucessfully"];
     }
+
     public function editEvent(Request $request, Event $event)
     {
         $user = auth()->user();
@@ -84,8 +97,17 @@ class EventsController extends Controller
             abort(422, "End date should be greater or equal than start date");
         }
 
+        $eventData["start_date"] = $startDate->format("Y-m-d");
+        $eventData["end_date"] = $endDate->format("Y-m-d");
+
         $event->update($eventData);
 
+        return $event;
+    }
+
+    public function toggleAttendance(Event $event) {
+        $event->attendance()->toggle(auth()->user()->id);
+        $event->loadCount("attendance");
         return $event;
     }
 }

@@ -19,6 +19,7 @@ class ListingResource extends JsonResource
             "price" => $this->price,
             "status" => $this->status,
             "mileage" => $this->mileage,
+            "description" => $this->description,
             "vehicle" => $this->whenLoaded("vehicle"),
             "created_at" => $this->created_at,
             "updated_at" => $this->updated_at

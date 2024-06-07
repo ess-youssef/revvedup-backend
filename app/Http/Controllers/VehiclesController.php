@@ -15,6 +15,8 @@ class VehiclesController extends Controller
 {
     public function show(Vehicle $vehicle)
     {
+        $vehicle->load("images");
+        $vehicle->load("owner");
         return $vehicle;
     }
 
@@ -37,7 +39,7 @@ class VehiclesController extends Controller
         
                     $files = $request->file("photos");
                     foreach ($files as $file) {
-                        $path = $file->store("uploads");
+                        $path = $file->store("public");
 
                         array_push($added_paths, $path);
 
@@ -46,6 +48,8 @@ class VehiclesController extends Controller
                         ]);
                     }
     
+                    $vehicle->load("images");
+                    $vehicle->load("owner");
                     response()->json($vehicle, 201);
                 } catch (Exception $e) {
                     foreach ($added_paths as $path) {
@@ -61,7 +65,7 @@ class VehiclesController extends Controller
 
     public function userVehicles(User $user)
     {
-        return $user->vehicles;
+        return $user->vehicles()->with("images")->with("owner")->get();
     }
 
     public function deleteUserVehicle(Vehicle $vehicle)
@@ -87,9 +91,46 @@ class VehiclesController extends Controller
             'model' => 'required|max:255',
             'year' => 'required|numeric',
             'description' => 'required|max:255',
+            'photos.*' => 'mimes:jpg,png,jpeg|max:5148',
+            'deletedPhotos.*' => 'numeric'
         ]);
 
-        $vehicle->update($vehicleData);
+        DB::transaction(function () use ($vehicleData, $request, $vehicle) {
+            $vehicle->update(Arr::except($vehicleData, ["photos", "deletedPhotos"]));
+
+            if ($request->hasFile("photos")) {
+                $added_paths = [];
+                try {
+        
+                    $files = $request->file("photos");
+                    foreach ($files as $file) {
+                        $path = $file->store("public");
+
+                        array_push($added_paths, $path);
+
+                        $vehicle->images()->create([
+                            "image_path" => $path
+                        ]);
+                    }
+    
+                    $vehicle->load("images");
+                    $vehicle->load("owner");
+                    response()->json($vehicle, 201);
+                } catch (Exception $e) {
+                    foreach ($added_paths as $path) {
+                        Storage::delete($path);
+                    }
+                    throw $e;
+                }
+            }
+
+            if ($request->has("deletedPhotos")) {
+                $vehicle->images()->whereIn('id', $vehicleData["deletedPhotos"])->delete();
+            }
+        });
+
+        $vehicle->load("images");
+        $vehicle->load("owner");
 
         return $vehicle;
     }

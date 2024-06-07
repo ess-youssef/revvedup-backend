@@ -7,6 +7,7 @@ use App\Http\Controllers\ListingsController;
 use App\Http\Controllers\PostsController;
 use App\Http\Controllers\UsersController;
 use App\Http\Controllers\VehiclesController;
+use App\Models\Event;
 use Illuminate\Support\Facades\Route;
 
 Route::prefix("auth")->group(function () {
@@ -16,10 +17,14 @@ Route::prefix("auth")->group(function () {
 
 Route::prefix("users")->group(function () {
     Route::post("register", [UsersController::class, "register"])->name("register");
+    Route::get("me", [UsersController::class, "me"])->middleware("auth:sanctum")->name("users.me");
+    Route::get("all", [UsersController::class, "all"])->middleware("auth:sanctum")->name("users.all");
     Route::get("{user}", [UsersController::class, "show"])->middleware("auth:sanctum")->name("users.show");
     Route::put("{user}", [UsersController::class, "edit"])->middleware("auth:sanctum")->name("users.edit");
 
     Route::get("{user}/vehicles", [VehiclesController::class, "userVehicles"])->name("user.vehicles");
+    Route::get("{user}/listings", [ListingsController::class, "userListings"])->name("user.listings");
+    Route::get("{user}/posts", [PostsController::class, "userPosts"])->name("user.posts");
 });
 
 Route::prefix("vehicles")->group(function () {
@@ -59,4 +64,6 @@ Route::prefix("events")->group(function () {
     Route::post("register", [EventsController::class, "register"])->middleware("auth:sanctum")->name("events.register");
     Route::delete("{event}", [EventsController::class, "deleteEvent"])->middleware("auth:sanctum")->name("events.delete");
     Route::put("{event}", [EventsController::class, "editEvent"])->middleware("auth:sanctum")->name("events.edit");
+
+    Route::post("{event}/attend", [EventsController::class, "toggleAttendance"])->middleware("auth:sanctum")->name("events.attend");
 });
